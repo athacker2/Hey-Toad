@@ -1,14 +1,16 @@
 import torch
 import numpy as np
-import pyaudio
+import pyaudio # audio input and output
+import pyttsx3 # text to speech
 
-from transformers import WhisperProcessor, WhisperForConditionalGeneration
+from transformers import WhisperProcessor, WhisperForConditionalGeneration # automatic speech recognition
 
 # GLOBALS
 SAMPLING_RATE = 16000
 CHUNK = 1024
 PASSIVE_TIME_SLICE = 3 # seconds
 ACTIVE_TIME_SLICE = 5 # seconds
+ENGINE_RATE = 175
 
 def main():  
     device = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -25,6 +27,10 @@ def main():
                     format=pyaudio.paInt16, 
                     input=True,
                     frames_per_buffer=CHUNK)
+    
+    # Load tts engine
+    engine = pyttsx3.init()
+    engine.setProperty("rate", ENGINE_RATE)
 
     # Passively listen for 'Hey Toad' from mic
     while True:
@@ -35,14 +41,16 @@ def main():
         # switch to command mode if audio contains 'hey toad'
         if("hey toad" in transcription.lower().replace(',','')):
             print("Waiting for commands...")
-            command_session(stream, processor, model)
+            # TTS
+            speak("Hey, Abhay!")
+            command_session(stream, processor, model, engine)
         else:
             print("I am asleep")
 
     stream.close()
     p.terminate()
 
-def command_session(stream, processor, model):
+def command_session(stream, processor, model, engine):
     # Actively listen for commands from mic
     while True:
         frames = retrieve_audio_input(stream, ACTIVE_TIME_SLICE)
@@ -53,20 +61,26 @@ def command_session(stream, processor, model):
 
         # handle each command accordingly
         if("calendar" in transcription.lower() or "schedule" in transcription.lower()):
-            print("Retrieving calendar info.")
+            # TTS
+            speak("Retrieving calendar info.")
+            # print("Retrieving calendar info.")
         elif("weather" in transcription.lower() or "temperature" in transcription.lower()):
-            print("Retrieving weather info.")
+            # TTS
+            speak("Retrieving weather info.")
+            # print("Retrieving weather info.")
         elif("bye" in transcription.lower() or "exit" in transcription.lower()):
-            print("Going back to sleep")
+            speak(engine, "Bye Abhay")
+            # print("Going back to sleep")
             return
         else:
-            print("I do not understand you")
+            speak("I do not understand you")
+            # print("I do not understand you")
 
 def retrieve_audio_input(stream, seconds):
     # Read from mic input
     frames = []
     # print("Starting Recording")
-    for i in range(0, int(SAMPLING_RATE / CHUNK * PASSIVE_TIME_SLICE)):
+    for i in range(0, int(SAMPLING_RATE / CHUNK * seconds)):
         data = stream.read(CHUNK, exception_on_overflow = False)
         frames.extend(np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0 )
     
@@ -79,6 +93,11 @@ def transcribe_audio(audio, model, processor):
     generated_ids = model.generate(inputs=input_features)
 
     return processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
+def speak(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
 
 if __name__ == "__main__":
     main()

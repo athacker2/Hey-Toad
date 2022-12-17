@@ -41,7 +41,6 @@ def main():
         # switch to command mode if audio contains 'hey toad'
         if("hey toad" in transcription.lower().replace(',','')):
             print("Waiting for commands...")
-            # TTS
             speak("Hey, Abhay!")
             command_session(stream, processor, model, engine)
         else:
@@ -61,20 +60,14 @@ def command_session(stream, processor, model, engine):
 
         # handle each command accordingly
         if("calendar" in transcription.lower() or "schedule" in transcription.lower()):
-            # TTS
             speak("Retrieving calendar info.")
-            # print("Retrieving calendar info.")
         elif("weather" in transcription.lower() or "temperature" in transcription.lower()):
-            # TTS
             speak("Retrieving weather info.")
-            # print("Retrieving weather info.")
         elif("bye" in transcription.lower() or "exit" in transcription.lower()):
             speak(engine, "Bye Abhay")
-            # print("Going back to sleep")
             return
         else:
             speak("I do not understand you")
-            # print("I do not understand you")
 
 def retrieve_audio_input(stream, seconds):
     # Read from mic input

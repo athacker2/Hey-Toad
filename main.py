@@ -3,6 +3,8 @@ import numpy as np
 import pyaudio # audio input and output
 import pyttsx3 # text to speech
 
+from timer import Timer_Manager
+
 from transformers import WhisperProcessor, WhisperForConditionalGeneration # automatic speech recognition
 
 # GLOBALS
@@ -17,8 +19,8 @@ def main():
     print(f"Using device: {device}")
 
     # load model and processor
-    processor = WhisperProcessor.from_pretrained("openai/whisper-tiny.en")
-    model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-tiny.en")
+    processor = WhisperProcessor.from_pretrained("openai/whisper-base.en")
+    model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-base.en")
 
     # Open mic audio stream
     p = pyaudio.PyAudio()
@@ -31,6 +33,9 @@ def main():
     # Load tts engine
     engine = pyttsx3.init()
     engine.setProperty("rate", ENGINE_RATE)
+
+    # Load Timer Manager
+    Timer_Manager().start()
 
     # Passively listen for 'Hey Toad' from mic
     while True:
@@ -45,9 +50,6 @@ def main():
             command_session(stream, processor, model, engine)
         else:
             print("I am asleep")
-
-    stream.close()
-    p.terminate()
 
 def command_session(stream, processor, model, engine):
     # Actively listen for commands from mic
@@ -64,8 +66,11 @@ def command_session(stream, processor, model, engine):
         elif("weather" in transcription.lower() or "temperature" in transcription.lower()):
             speak("Retrieving weather info.")
         elif("bye" in transcription.lower() or "exit" in transcription.lower()):
-            speak(engine, "Bye Abhay")
+            speak("Bye Abhay")
             return
+        elif("set" in transcription.lower() and "timer" in transcription.lower()): # i.e. set a timer for [TIME]
+            Timer_Manager.create_timer("default", 30)
+            speak("Setting a timer for 30 seconds.")
         else:
             speak("I do not understand you")
 

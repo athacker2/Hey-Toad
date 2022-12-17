@@ -2,3 +2,9 @@
 *.m4a
 *.mp3
 *.wav
+
+# Sensitive Files
+keys.py
+
+# Miscellaneous Files
+*pycache*

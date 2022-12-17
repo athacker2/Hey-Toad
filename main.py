@@ -3,6 +3,8 @@ import numpy as np
 import pyaudio # audio input and output
 import pyttsx3 # text to speech
 
+from weather import * # custom weather API 
+
 from transformers import WhisperProcessor, WhisperForConditionalGeneration # automatic speech recognition
 
 # GLOBALS
@@ -67,6 +69,7 @@ def command_session(stream, processor, model, engine):
         elif("weather" in transcription.lower() or "temperature" in transcription.lower()):
             # TTS
             speak("Retrieving weather info.")
+            speak(get_weather("Fremont , CA")) # hard coded to current location
             # print("Retrieving weather info.")
         elif("bye" in transcription.lower() or "exit" in transcription.lower()):
             speak(engine, "Bye Abhay")
